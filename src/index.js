@@ -33,7 +33,6 @@ class Location extends React.Component {
     }
 
     render() {
-        console.log(this.state.type);
         if (this.state.submit === false) {
             return (
                 <div>
@@ -86,10 +85,18 @@ class Weather extends React.Component {
             .then(responce => responce.json()
             )
             .then(data => {
-                console.log(data.weather[0]);
+                console.log(data);
+                console.log(data.cod);
+                if(data.cod==="404"){
+                    window.location.reload();
+                    alert("Not a valid location");
+                }
                 this.setState({temp: data.main});
-                this.setState({weather: data.weather[0]})
+                this.setState({weather: data.weather[0]});
+            }).catch((error)=>{
+                console.log(error);
             });
+
     }
 
     render() {
