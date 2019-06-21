@@ -1,0 +1,20 @@
+#Header{
+    float: top;
+    background-color: #CCAA70;
+    font: 28px "Calibri";
+    margin-bottom: 10px;
+}
+
+.Type{
+    float: right;
+    font: 18px "Calibri";
+}
+.onType{
+    background:#D9A855 ;
+    border-color:#D9A855 ;
+}
+.Home{
+    background-color: #CCAA70;
+    border-color: #CCAA70;
+    font: 28px "Calibri";
+}
