@@ -3,6 +3,8 @@ import ReactDOM from 'react-dom';
 import './index.css';
 import {Header} from './Header.js'
 
+
+
 class Location extends React.Component {
     constructor(props) {
         super(props);
@@ -10,11 +12,25 @@ class Location extends React.Component {
             submit: false,
             location: '',
             type: '°F',
+            lat: '',
+            lon: '',
+            geoLocate: false,
         };
 
         this.handleChange = this.handleChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
 
+    }
+
+    getLocation(){
+        navigator.geolocation.getCurrentPosition((position)=>{
+            this.setState({
+                geoLocate: true,
+                submit:true,
+                lat: position.coords.latitude,
+                lon: position.coords.longitude,
+            })
+        })
     }
 
     onSetTempType(type) {
@@ -32,20 +48,22 @@ class Location extends React.Component {
         this.setState({submit: true});
     }
 
+
     render() {
         if (this.state.submit === false) {
             return (
                 <div>
                     <Header type={this.state.type} changeType={this.onSetTempType.bind(this)}/>
                     <div className="Main">
-
-                        <form onSubmit={this.handleSubmit}>
-                            <label>
-                                Please enter your location: <input type="text" value={this.state.location}
-                                                                   onChange={this.handleChange}/>
-                            </label>
-                            <input type="submit" value="Submit"/>
-                        </form>
+                        <div>Please enter your city or ZIP code:
+                            <form onSubmit={this.handleSubmit}>
+                                <input type="text" value={this.state.location}
+                                       onChange={this.handleChange}/>
+                                <input type="submit" value="Submit"/>
+                            </form>
+                            &nbsp;or <button className="geo" onClick={this.getLocation.bind(this)}>Get current
+                                location</button>
+                        </div>
                     </div>
                 </div>
             )
@@ -53,7 +71,8 @@ class Location extends React.Component {
             return (
                 <div>
                     <Header type={this.state.type} changeType={this.onSetTempType.bind(this)}/>
-                    <Weather userLoc={this.state.location} type={this.state.type}/>
+                    <Weather userLoc={this.state.location} type={this.state.type} geo={this.state.geoLocate}
+                             lon={this.state.lon} lat={this.state.lat}/>
                 </div>
             )
         }
@@ -67,6 +86,9 @@ class Weather extends React.Component {
             loc: '',
             type: '',
             temp: [],
+            lat: '',
+            lon: '',
+            geoLocate: false,
             weather: [],
         };
 
@@ -81,19 +103,32 @@ class Weather extends React.Component {
     async componentDidMount() {
         this.setState({loc: this.props.userLoc});
         this.setState({type: this.props.type});
-        await fetch('https://api.openweathermap.org/data/2.5/weather?q=' + this.props.userLoc + '&APPID=789a3dc024444d52236fdd13e641da8c')
+        var isnum = /^\d+$/.test(this.props.userLoc);
+        console.log(isnum);
+        var url = '';
+        console.log(this.props.geo);
+        if (this.props.geo) {
+            url = 'https://api.openweathermap.org/data/2.5/weather?lat=' + this.props.lat + '&lon=' + this.props.lon + '&APPID=789a3dc024444d52236fdd13e641da8c'
+        } else {
+            isnum ? url = 'https://api.openweathermap.org/data/2.5/weather?zip=' + this.props.userLoc + ',us&APPID=789a3dc024444d52236fdd13e641da8c'
+                : url = 'https://api.openweathermap.org/data/2.5/weather?q=' + this.props.userLoc + '&APPID=789a3dc024444d52236fdd13e641da8c';
+        }
+        console.log(url);
+        console.log(this.props.userLoc);
+        console.log(typeof this.props.userLoc);
+        await fetch(url)
             .then(responce => responce.json()
             )
             .then(data => {
                 console.log(data);
                 console.log(data.cod);
-                if(data.cod==="404"){
+                if (data.cod === "404") {
                     window.location.reload();
-                    alert("Not a valid location");
+                    alert(data.message);
                 }
                 this.setState({temp: data.main});
                 this.setState({weather: data.weather[0]});
-            }).catch((error)=>{
+            }).catch((error) => {
                 console.log(error);
             });
 

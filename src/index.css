@@ -9,6 +9,6 @@ body{
     padding-bottom: 3px;
 }
 
-#input{
-
+form{
+    display: inline-block;
 }
