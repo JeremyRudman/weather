@@ -103,6 +103,7 @@ class Weather extends React.Component {
     async componentDidMount() {
         this.setState({loc: this.props.userLoc});
         this.setState({type: this.props.type});
+        this.setState({geoLocate: this.props.geo});
         var isnum = /^\d+$/.test(this.props.userLoc);
         console.log(isnum);
         var url = '';
@@ -149,14 +150,25 @@ class Weather extends React.Component {
             min = parseInt((min - 273.15) + .5);
         }
 
-        return (
-            <div className="Main">
-                <div> It is currently {temp}{this.state.type} with {sky} in {this.state.loc}, expected high
-                    of {max}{this.state.type} and a low
-                    of {min}{this.state.type}
+        if(this.state.geoLocate===false) {
+            return (
+                <div className="Main">
+                    <div> It is currently {temp}{this.state.type} with {sky} in {this.state.loc}, expected a high
+                        of {max}{this.state.type} and a low
+                        of {min}{this.state.type}
+                    </div>
                 </div>
-            </div>
-        );
+            );
+        }else{
+            return (
+                <div className="Main">
+                    <div> It is currently {temp}{this.state.type} with {sky}, expected a high
+                        of {max}{this.state.type} and a low
+                        of {min}{this.state.type}
+                    </div>
+                </div>
+            );
+        }
     }
 
 
