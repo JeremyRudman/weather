@@ -90,6 +90,8 @@ class Weather extends React.Component {
             lon: '',
             geoLocate: false,
             weather: [],
+            forcast:[],
+            startTime: 0,
         };
 
     }
@@ -107,12 +109,20 @@ class Weather extends React.Component {
         var isnum = /^\d+$/.test(this.props.userLoc);
         console.log(isnum);
         var url = '';
+        var forcastUrl = '';
         console.log(this.props.geo);
         if (this.props.geo) {
-            url = 'https://api.openweathermap.org/data/2.5/weather?lat=' + this.props.lat + '&lon=' + this.props.lon + '&APPID=789a3dc024444d52236fdd13e641da8c'
+            url = 'https://api.openweathermap.org/data/2.5/weather?lat=' + this.props.lat + '&lon=' + this.props.lon + '&APPID=789a3dc024444d52236fdd13e641da8c';
+            forcastUrl='https://api.openweathermap.org/data/2.5/forecast?lat='+this.props.lat+'&lon='+this.props.lon+'&APPID=789a3dc024444d52236fdd13e641da8c'
         } else {
-            isnum ? url = 'https://api.openweathermap.org/data/2.5/weather?zip=' + this.props.userLoc + ',us&APPID=789a3dc024444d52236fdd13e641da8c'
-                : url = 'https://api.openweathermap.org/data/2.5/weather?q=' + this.props.userLoc + '&APPID=789a3dc024444d52236fdd13e641da8c';
+            if(isnum){
+                url = 'https://api.openweathermap.org/data/2.5/weather?zip=' + this.props.userLoc + ',us&APPID=789a3dc024444d52236fdd13e641da8c';
+                forcastUrl='https://api.openweathermap.org/data/2.5/forecast?zip='+this.props.userLoc+',us&APPID=789a3dc024444d52236fdd13e641da8c';
+            }
+            else {
+                url = 'https://api.openweathermap.org/data/2.5/weather?q=' + this.props.userLoc + '&APPID=789a3dc024444d52236fdd13e641da8c';
+                forcastUrl='https://api.openweathermap.org/data/2.5/forecast?q='+this.props.userLoc+'&APPID=789a3dc024444d52236fdd13e641da8c';
+            }
         }
         console.log(url);
         console.log(this.props.userLoc);
@@ -127,8 +137,32 @@ class Weather extends React.Component {
                     window.location.reload();
                     alert(data.message);
                 }
+                console.log(data);
                 this.setState({temp: data.main});
                 this.setState({weather: data.weather[0]});
+            }).catch((error) => {
+                console.log(error);
+            });
+        await fetch(forcastUrl)
+            .then(responce => responce.json()
+            )
+            .then(data => {
+                console.log(data);
+                console.log(data.cod);
+                if (data.cod === "404") {
+                    window.location.reload();
+                    alert(data.message);
+                }
+                var temp=[40];
+                var time=((data.list[0].dt));
+                console.log(time);
+                var date = new Date(0);
+                date.setUTCSeconds(time);
+                this.setState({startTime:date.getHours()});
+                for (let i = 0; i < 40; i++) {
+                    temp[i]=data.list[i].main.temp;
+                }
+                this.setState({forcast:temp});
             }).catch((error) => {
                 console.log(error);
             });
@@ -136,19 +170,29 @@ class Weather extends React.Component {
     }
 
     render() {
+        let cast=this.state.forcast;
         let max = this.state.temp.temp_max;
         let temp = this.state.temp.temp;
         let min = this.state.temp.temp_min;
         let sky = this.state.weather.description;
         if (this.state.type === '°F') {
+            for (let i = 0; i < 40; i++) {
+                cast[i]=parseInt((cast[i] - 273.15) * (9 / 5) + 32.5);
+            }
             max = parseInt((max - 273.15) * (9 / 5) + 32.5);
             temp = parseInt((temp - 273.15) * (9 / 5) + 32.5);
             min = parseInt((min - 273.15) * (9 / 5) + 32.5);
         } else {
+            for (let i = 0; i < 40; i++) {
+                cast[i]=parseInt((cast[i] - 273.15)+.5);
+            }
             max = parseInt((max - 273.15) + .5);
             temp = parseInt((temp - 273.15) + .5);
             min = parseInt((min - 273.15) + .5);
         }
+        const forcastList = cast.map((cast)=>
+            <li>{cast}</li>
+        );
 
         if(this.state.geoLocate===false) {
             return (
@@ -166,6 +210,9 @@ class Weather extends React.Component {
                         of {max}{this.state.type} and a low
                         of {min}{this.state.type}
                     </div>
+                    <ul>
+                        {forcastList}
+                    </ul>
                 </div>
             );
         }
