@@ -208,10 +208,15 @@ class Weather extends React.Component {
         var chartData={
             labels: time,
             datasets:[{
-                label:"Temperature", data:cast,
+                label:"Temperature", data:cast,backgroundColor:'rgba(199,178,141,.7)',borderColor:'rgba(199,178,141,1)'
             }],
         };
 
+        var options={
+            legend: {
+                display: false,
+            },
+        };
         if (this.state.geoLocate === false) {
             return (
                 <div className="Main">
@@ -220,7 +225,7 @@ class Weather extends React.Component {
                         of {min}{this.state.type}
                     </div>
                     <div className='chart'>
-                        <Line data={chartData}/>
+                        <Line data={chartData} options={options}/>
                     </div>
                 </div>
             );
@@ -232,7 +237,7 @@ class Weather extends React.Component {
                         of {min}{this.state.type}
                     </div>
                     <div className='chart'>
-                        <Line data={chartData}/>
+                        <Line data={chartData} options={options}/>
                     </div>
                 </div>
             );

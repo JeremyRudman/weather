@@ -12,7 +12,9 @@ body{
 form{
     display: inline-block;
 }
+
 .chart{
     background-color: #ffe4b5;
+    padding: 1%;
     margin: 1%;
 }
