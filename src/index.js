@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
 import {Header} from './Header.js'
+import {Line} from 'react-chartjs-2';
 
 
 
@@ -22,11 +23,11 @@ class Location extends React.Component {
 
     }
 
-    getLocation(){
-        navigator.geolocation.getCurrentPosition((position)=>{
+    getLocation() {
+        navigator.geolocation.getCurrentPosition((position) => {
             this.setState({
                 geoLocate: true,
-                submit:true,
+                submit: true,
                 lat: position.coords.latitude,
                 lon: position.coords.longitude,
             })
@@ -90,8 +91,8 @@ class Weather extends React.Component {
             lon: '',
             geoLocate: false,
             weather: [],
-            forcast:[],
-            startTime: 0,
+            forcast: [],
+            time: [],
         };
 
     }
@@ -113,15 +114,14 @@ class Weather extends React.Component {
         console.log(this.props.geo);
         if (this.props.geo) {
             url = 'https://api.openweathermap.org/data/2.5/weather?lat=' + this.props.lat + '&lon=' + this.props.lon + '&APPID=789a3dc024444d52236fdd13e641da8c';
-            forcastUrl='https://api.openweathermap.org/data/2.5/forecast?lat='+this.props.lat+'&lon='+this.props.lon+'&APPID=789a3dc024444d52236fdd13e641da8c'
+            forcastUrl = 'https://api.openweathermap.org/data/2.5/forecast?lat=' + this.props.lat + '&lon=' + this.props.lon + '&APPID=789a3dc024444d52236fdd13e641da8c'
         } else {
-            if(isnum){
+            if (isnum) {
                 url = 'https://api.openweathermap.org/data/2.5/weather?zip=' + this.props.userLoc + ',us&APPID=789a3dc024444d52236fdd13e641da8c';
-                forcastUrl='https://api.openweathermap.org/data/2.5/forecast?zip='+this.props.userLoc+',us&APPID=789a3dc024444d52236fdd13e641da8c';
-            }
-            else {
+                forcastUrl = 'https://api.openweathermap.org/data/2.5/forecast?zip=' + this.props.userLoc + ',us&APPID=789a3dc024444d52236fdd13e641da8c';
+            } else {
                 url = 'https://api.openweathermap.org/data/2.5/weather?q=' + this.props.userLoc + '&APPID=789a3dc024444d52236fdd13e641da8c';
-                forcastUrl='https://api.openweathermap.org/data/2.5/forecast?q='+this.props.userLoc+'&APPID=789a3dc024444d52236fdd13e641da8c';
+                forcastUrl = 'https://api.openweathermap.org/data/2.5/forecast?q=' + this.props.userLoc + '&APPID=789a3dc024444d52236fdd13e641da8c';
             }
         }
         console.log(url);
@@ -133,7 +133,7 @@ class Weather extends React.Component {
             .then(data => {
                 console.log(data);
                 console.log(data.cod);
-                if (data.cod === "404") {
+                if (data.cod === "404" || data.message === "Nothing to geocode") {
                     window.location.reload();
                     alert(data.message);
                 }
@@ -153,16 +153,26 @@ class Weather extends React.Component {
                     window.location.reload();
                     alert(data.message);
                 }
-                var temp=[40];
-                var time=((data.list[0].dt));
+                var forcast = [40];
+                var time = [40];
                 console.log(time);
-                var date = new Date(0);
-                date.setUTCSeconds(time);
-                this.setState({startTime:date.getHours()});
                 for (let i = 0; i < 40; i++) {
-                    temp[i]=data.list[i].main.temp;
+                    var date = new Date(0);
+                    date.setUTCSeconds(data.list[i].dt);
+                    if(date.getHours()>12){
+                        time[i]=(date.getHours()-12)+'pm';
+                    }
+                    else {
+                        time[i]=date.getHours()+'am';
+                    }
                 }
-                this.setState({forcast:temp});
+                this.setState({time: time});
+                for (let i = 0; i < 40; i++) {
+                    forcast[i] = data.list[i].main.temp;
+                }
+                this.setState({forcast: forcast});
+                console.log(time);
+
             }).catch((error) => {
                 console.log(error);
             });
@@ -170,49 +180,60 @@ class Weather extends React.Component {
     }
 
     render() {
-        let cast=this.state.forcast;
+        let cast = this.state.forcast.slice();
         let max = this.state.temp.temp_max;
         let temp = this.state.temp.temp;
         let min = this.state.temp.temp_min;
         let sky = this.state.weather.description;
+        let time=this.state.time;
+
+
         if (this.state.type === '°F') {
             for (let i = 0; i < 40; i++) {
-                cast[i]=parseInt((cast[i] - 273.15) * (9 / 5) + 32.5);
+                cast[i] = parseInt((cast[i] - 273.15) * (9 / 5) + 32.5);
             }
             max = parseInt((max - 273.15) * (9 / 5) + 32.5);
             temp = parseInt((temp - 273.15) * (9 / 5) + 32.5);
             min = parseInt((min - 273.15) * (9 / 5) + 32.5);
         } else {
             for (let i = 0; i < 40; i++) {
-                cast[i]=parseInt((cast[i] - 273.15)+.5);
+                cast[i] = parseInt((cast[i] - 273.15) + .5);
             }
             max = parseInt((max - 273.15) + .5);
             temp = parseInt((temp - 273.15) + .5);
             min = parseInt((min - 273.15) + .5);
         }
-        const forcastList = cast.map((cast)=>
-            <li>{cast}</li>
-        );
+        console.log(cast);
 
-        if(this.state.geoLocate===false) {
+        var chartData={
+            labels: time,
+            datasets:[{
+                label:"Temperature", data:cast,
+            }],
+        };
+
+        if (this.state.geoLocate === false) {
             return (
                 <div className="Main">
                     <div> It is currently {temp}{this.state.type} with {sky} in {this.state.loc}, expected a high
                         of {max}{this.state.type} and a low
                         of {min}{this.state.type}
                     </div>
+                    <div className='chart'>
+                        <Line data={chartData}/>
+                    </div>
                 </div>
             );
-        }else{
+        } else {
             return (
                 <div className="Main">
                     <div> It is currently {temp}{this.state.type} with {sky}, expected a high
                         of {max}{this.state.type} and a low
                         of {min}{this.state.type}
                     </div>
-                    <ul>
-                        {forcastList}
-                    </ul>
+                    <div className='chart'>
+                        <Line data={chartData}/>
+                    </div>
                 </div>
             );
         }
