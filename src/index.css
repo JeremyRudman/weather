@@ -14,6 +14,7 @@ form{
 }
 
 .chart{
+    max-height: 500px;
     background-color: #ffe4b5;
     padding: 1%;
     margin: 1%;

@@ -5,7 +5,6 @@ import {Header} from './Header.js'
 import {Line} from 'react-chartjs-2';
 
 
-
 class Location extends React.Component {
     constructor(props) {
         super(props);
@@ -104,7 +103,6 @@ class Weather extends React.Component {
     }
 
     async componentDidMount() {
-        this.setState({loc: this.props.userLoc});
         this.setState({type: this.props.type});
         this.setState({geoLocate: this.props.geo});
         var isnum = /^\d+$/.test(this.props.userLoc);
@@ -124,13 +122,11 @@ class Weather extends React.Component {
                 forcastUrl = 'https://api.openweathermap.org/data/2.5/forecast?q=' + this.props.userLoc + '&APPID=789a3dc024444d52236fdd13e641da8c';
             }
         }
-        console.log(url);
-        console.log(this.props.userLoc);
-        console.log(typeof this.props.userLoc);
         await fetch(url)
             .then(responce => responce.json()
             )
             .then(data => {
+                console.log('%c The location data', 'color:green;font-weight:bold;');
                 console.log(data);
                 console.log(data.cod);
                 if (data.cod === "404" || data.message === "Nothing to geocode") {
@@ -138,6 +134,7 @@ class Weather extends React.Component {
                     alert(data.message);
                 }
                 console.log(data);
+                this.setState({loc: data.name});
                 this.setState({temp: data.main});
                 this.setState({weather: data.weather[0]});
             }).catch((error) => {
@@ -147,6 +144,7 @@ class Weather extends React.Component {
             .then(responce => responce.json()
             )
             .then(data => {
+                console.log('%c The forecast data', 'color:green;font-weight:bold;');
                 console.log(data);
                 console.log(data.cod);
                 if (data.cod === "404") {
@@ -159,11 +157,10 @@ class Weather extends React.Component {
                 for (let i = 0; i < 40; i++) {
                     var date = new Date(0);
                     date.setUTCSeconds(data.list[i].dt);
-                    if(date.getHours()>12){
-                        time[i]=(date.getHours()-12)+'pm';
-                    }
-                    else {
-                        time[i]=date.getHours()+'am';
+                    if (date.getHours() > 12) {
+                        time[i] = (date.getHours() - 12) + 'pm';
+                    } else {
+                        time[i] = date.getHours() + 'am';
                     }
                 }
                 this.setState({time: time});
@@ -172,7 +169,6 @@ class Weather extends React.Component {
                 }
                 this.setState({forcast: forcast});
                 console.log(time);
-
             }).catch((error) => {
                 console.log(error);
             });
@@ -185,8 +181,7 @@ class Weather extends React.Component {
         let temp = this.state.temp.temp;
         let min = this.state.temp.temp_min;
         let sky = this.state.weather.description;
-        let time=this.state.time;
-
+        let time = this.state.time;
 
         if (this.state.type === '°F') {
             for (let i = 0; i < 40; i++) {
@@ -203,45 +198,35 @@ class Weather extends React.Component {
             temp = parseInt((temp - 273.15) + .5);
             min = parseInt((min - 273.15) + .5);
         }
-        console.log(cast);
 
-        var chartData={
+        var chartData = {
             labels: time,
-            datasets:[{
-                label:"Temperature", data:cast,backgroundColor:'rgba(199,178,141,.7)',borderColor:'rgba(199,178,141,1)'
+            datasets: [{
+                label: "Temperature",
+                data: cast,
+                backgroundColor: 'rgba(199,178,141,.7)',
+                borderColor: 'rgba(199,178,141,1)'
             }],
         };
 
-        var options={
+        var options = {
             legend: {
                 display: false,
             },
+            maintainAspectRatio: false,
+
         };
-        if (this.state.geoLocate === false) {
-            return (
-                <div className="Main">
-                    <div> It is currently {temp}{this.state.type} with {sky} in {this.state.loc}, expected a high
-                        of {max}{this.state.type} and a low
-                        of {min}{this.state.type}
-                    </div>
-                    <div className='chart'>
-                        <Line data={chartData} options={options}/>
-                    </div>
+        return (
+            <div className="Main">
+                <div> It is currently {temp}{this.state.type} with {sky} in {this.state.loc}, expected a high
+                    of {max}{this.state.type} and a low
+                    of {min}{this.state.type}
                 </div>
-            );
-        } else {
-            return (
-                <div className="Main">
-                    <div> It is currently {temp}{this.state.type} with {sky}, expected a high
-                        of {max}{this.state.type} and a low
-                        of {min}{this.state.type}
-                    </div>
-                    <div className='chart'>
-                        <Line data={chartData} options={options}/>
-                    </div>
+                <div className='chart'>
+                    <Line data={chartData} height={500} options={options}/>
                 </div>
-            );
-        }
+            </div>
+        )
     }
 
 
